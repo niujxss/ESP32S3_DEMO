@@ -1,0 +1,15 @@
+{
+    "C_Cpp.intelliSenseEngine": "default",
+    "idf.espIdfPathWin": "D:/WorkSpace/ESP-IDF/frameworks/esp-idf-v5.4/",
+    "idf.openOcdConfigs": [
+        "board/esp32s3-builtin.cfg"
+    ],
+    "idf.toolsPathWin": "D:\\WorkSpace\\ESP-IDF",
+    "idf.portWin": "COM4",
+    "idf.flashType": "JTAG",
+    "files.associations": {
+        "task.h": "c",
+        "sdkconfig.h": "c",
+        "freertos.h": "c"
+    }
+}
