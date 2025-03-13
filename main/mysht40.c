@@ -1,15 +1,8 @@
-/*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: Apache-2.0
- */
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
 
-#include "stdio.h"
-#include "driver/i2c_master.h"
+#include "mysht40.h"
+
+static void my_IIC_readdata(uint8_t * buffer);
 
 #define I2C_MASTER_SCL_IO    6     // SCL 引脚号（GPIO6）
 #define I2C_MASTER_SDA_IO    5     // SDA 引脚号（GPIO5）
@@ -30,7 +23,7 @@ i2c_master_bus_config_t bus_config = {
 i2c_master_bus_handle_t bus_handle;
 i2c_master_dev_handle_t dev_handle;
 
-void unity_run_menu()
+void sht40_init()
 {
     printf("Hello! 开始执行 SHT40 驱动程序\n");
     
@@ -87,7 +80,7 @@ void my_read_id(void)
     }
 }
 
-void my_read_data(uint8_t * buffer)
+void my_IIC_readdata(uint8_t * buffer)
 {
     //写入指令
     uint8_t controlid = 0xFD; //读取数据指令
@@ -110,22 +103,24 @@ void my_read_data(uint8_t * buffer)
 
 }
 
-void sht40_data_read(void)
+sht40data_t sht40_data_read(void)
 {
         uint16_t recovery_temper = 0u;
         uint16_t recovery_hum = 0u;
         float temp = 0.f;
         float hum = 0.f;
         uint8_t buffer[6];
+        sht40data_t sht40data;
+        sht40data.data_flag = DATA_FLAG_ERROR;
 
-        my_read_data(buffer);
+        my_IIC_readdata(buffer);
         recovery_temper = ((uint16_t)buffer[0]<<8)|buffer[1];
         temp = -45 + 175*((float)recovery_temper/65535);
 
         if(temp < -40.f)
         {
             printf("湿度异常 %.2f\n",temp);
-            return;
+            return sht40data;
         }
  
         /* 转换湿度数据 */
@@ -141,20 +136,11 @@ void sht40_data_read(void)
         }
 				
 		printf("温度为：%.2f 湿度为：%.2f end\n",temp,hum);
-}
 
-void app_main(void)
-{
-    unity_run_menu();
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    my_read_id();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    printf("开始测量温湿度！！\n");
-     while (1)
-     {
-        sht40_data_read();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-     }
-    
-}
+        sht40data.data_flag = DATA_FLAG_OK;
+        sht40data.temp = temp;
+        sht40data.hum = hum;
+        return sht40data;
 
+        
+}
